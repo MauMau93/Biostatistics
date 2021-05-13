@@ -1,0 +1,104 @@
+---
+title: "Biostatistics - Task  1"
+author: "Mauricio Marcos Fajgenbaun"
+date: "13/5/2021"
+output: html_document
+---
+
+
+```{r}
+library( vcd )
+library( dplyr )
+library( mosaic )
+```
+
+
+## Exercise 1
+
+
+```{r}
+x <- data.frame("Density" = c("None","Low","Intermediate","High"), "Mean_Seagrass" = c(34.81,33.13,28.33,15.00))
+x
+x$Density <- (x$Density);
+x$Density
+```
+
+
+```{r}
+res <- aov(formula = Mean_Seagrass ~ Density, data = x)
+anova(res)
+```
+
+```{r}
+pairwise.t.test(x$Mean_Seagrass,x$Density , p.adj = " none ")
+```
+```{r}
+TukeyHSD(res)
+```
+
+## Exercise 2
+
+
+
+
+```{r}
+A <- c(324,275,349,604,566,810,340,295,357,580,344,655,380,503,314)
+B <- c(558,108,291,863,303,640,358,503,646,689,250,540,630,190)
+```
+
+First, let´s see if they behave normal or not.
+
+```{r}
+plot(density(A))
+plot(density(B))
+```
+
+```{r}
+shapiro.test(A)
+shapiro.test(B)
+```
+First, we reject the null hypotesis of Group A having a normal distribution. Nevertheless, when we see the p-value of the second group (group B), it does not behave gaussian. When inspecting the density plots, we see that the group B does not seem to have a skewed distribution, as we can assume normality.
+
+## Exercise 3
+
+This is a categorical data problem. Now we want to do a comparison between to independent groups, the one that got conventional therapy and other that got  alternative therapy, and check the followeing hypotesis test:
+
+Ho) The relapses and the groups are independent (there is homogeneity in the distribution of the relapses among the comparison groups).
+H1) There is a difference in the distribution of the relapses among the two groups
+
+The test is called Chi-squared test of independance:
+
+```{r}
+therapy = matrix ( c (2 ,8 ,21 ,16) ,
+nrow = 2 ,
+dimnames = list ( " Treatment " = c ( " Conventional " , " Alternative " ) ,
+" Relapses " = c ( " Yes " , " No " )))
+therapy
+```
+
+
+
+
+As the test statistic works only for big samples, I need to check that the expected frequencies are at least 5.
+
+```{r}
+chisq.test (therapy)$ expected
+```
+
+As we can see, there is one cell that the expected count is smaller than 5. Nevertheless, it is very close to 5. For this reason I will do the analysis both with a chi-square test and with a Fisher Exact test.
+
+```{r}
+chisq.test(therapy)
+```
+
+
+```{r}
+chisq.test ( therapy , simulate.p.value = TRUE , B =1000)
+```
+
+With Fisher Exact test:
+
+```{r}
+fisher.test ( therapy)
+```
+
