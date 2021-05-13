@@ -19,21 +19,81 @@ library( mosaic )
 ```{r}
 x <- data.frame("Density" = c("None","Low","Intermediate","High"), "Mean_Seagrass" = c(34.81,33.13,28.33,15.00))
 x
-x$Density <- (x$Density);
+x$Density <- as.factor(x$Density);
 x$Density
 ```
 
+a) Three Bonferroni adjusted confidence interval, comparing each parcel with the parcel that had no oysters introduced.
+
+In general, a confidence interval testing equal mean between groups can be performed as follows:
 
 ```{r}
-res <- aov(formula = Mean_Seagrass ~ Density, data = x)
-anova(res)
+library(knitr)
 ```
+$(\hat{\mu_1}-\hat{\mu_2})\pm t_1_-$
+
+```{r}
+mu_none <- 34.81
+mu_low <- 33.13
+mu_int <- 28.33
+mu_high <- 15.00
+MSE <- 220.94
+n <- 10
+N <- 20
+k = 2
+alpha <- 0.05
+comp <- 3
+alpha_bonf <- alpha/comp
+t <- pt(1-alpha_bonf/2,N-k)
+bonf_confid <- (1-(alpha_bonf*2))
+bonf_confid
+```
+
+i) Confidence Interval between means: low vs none
+
+```{r}
+low <- (mu_none-mu_low) - t*sqrt((1/n)+(1/n))
+upp <- (mu_none-mu_low) + t*sqrt((1/n)+(1/n))
+low
+upp
+```
+This means that a bonferroni adjusted confidence interval at 96.66667% of confidence for the mean difference between the control parcel and the one with low density of oysters is: (1.3075 , 2.0524).
+
+Let´s repeat the same proceadure for the other two comparisons:
+
+
+ii) Confidence Interval between means: intermediate vs none
+
+```{r}
+low <- (mu_none-mu_int) - t*sqrt((1/n)+(1/n))
+upp <- (mu_none-mu_int) + t*sqrt((1/n)+(1/n))
+low
+upp
+```
+
+iii) ii) Confidence Interval between means: high vs none
+
+```{r}
+low <- (mu_none-mu_high) - t*sqrt((1/n)+(1/n))
+upp <- (mu_none-mu_high) + t*sqrt((1/n)+(1/n))
+low
+upp
+```
+
 
 ```{r}
 pairwise.t.test(x$Mean_Seagrass,x$Density , p.adj = " none ")
 ```
 ```{r}
 TukeyHSD(res)
+```
+
+
+```{r}
+#experiment <- data.frame(group=Density, ASO=Mean_Seagrass)
+library(pairwiseCI)
+pairwiseCI(Mean_Seagrass ~ Density, data = x, 
+           method = "Param.diff", conf.level = 0.983, var.equal = TRUE)
 ```
 
 ## Exercise 2
