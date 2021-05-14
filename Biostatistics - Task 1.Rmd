@@ -15,6 +15,7 @@ library( mosaic )
 
 ## Exercise 1
 
+First, we need to create a data frame with the values of the table.
 
 ```{r}
 x <- data.frame("Density" = c("None","Low","Intermediate","High"), "Mean_Seagrass" = c(34.81,33.13,28.33,15.00))
@@ -45,6 +46,11 @@ alpha <- 0.05
 comp <- 3
 alpha_bonf <- alpha/comp
 t <- pt(1-alpha_bonf/2,N-k)
+```
+
+Now, we can compute the significance level, adjusted by the bonferroni method: 
+
+```{r}
 bonf_confid <- (1-(alpha_bonf*2))
 bonf_confid
 ```
@@ -118,7 +124,7 @@ low
 upp
 ```
 
-iii) No CI that include cero....so all  of the differences are significative?
+iii) As no Confidence interval includes zero, we can say with a confidence level of 95% and even when we adjust that level and get a stricter result with both methods, all of the differences are significant.
 
 ## Exercise 2
 
@@ -141,6 +147,7 @@ Let´s perform a Shapiro.Wilkin test, to test our null hypothesis of our distrib
 shapiro.test(A)
 shapiro.test(B)
 ```
+
 First, we reject the null hypotesis of Group A having a normal distribution. Nevertheless, when we see the p-value of the second group (group B), it does not behave gaussian. When inspecting the density plots, we see that the group B does not seem to have a skewed distribution, as we can assume normality.
 
 
@@ -163,8 +170,6 @@ therapy
 ```
 
 
-
-
 As the test statistic works only for big samples, I need to check that the expected frequencies are at least 5.
 
 ```{r}
@@ -176,21 +181,30 @@ As we can see, there is one cell that the expected count is smaller than 5. Neve
 ```{r}
 chisq.test(therapy)
 ```
+As we can see, the p-value is larger than 0.05 and that means we can not reject the null hypothesis that sais that the treatment has no effect in the outcome. 
 
+Let´s see what happens when we check with a resampling method:
 
 ```{r}
-chisq.test ( therapy , simulate.p.value = TRUE , B =1000)
+chisq.test (therapy,simulate.p.value = TRUE , B =1000)
 ```
+Again, our p-value is larger than 0.05 and that makes us think that we can not reject the null hypothesis. It seems that at this level of significance (0.05) the two therapies are equally effective.
+
+Asstated before, some of the values when calculating the expected count in the contingency table were below 5. Even though when we round it, it gets to 5, we will still perform the Fisher Exact Test to be sure about our conclusions.
+
 
 With Fisher Exact test:
 
 ```{r}
-fisher.test (therapy)
+fisher.test(therapy)
 ```
+
+Finally, this confirms our conclusions. There is significant difference between the treatments in the final outcome at a significance level of 0.05.
 
 ## Exercise 4
 
 a) First, we build a contingency table with our two categorical variables.
+
 ```{r}
 exerc_4 = matrix ( c (17 ,298 ,230 ,428) ,
 nrow = 2 ,
@@ -202,13 +216,12 @@ exerc_4
 b) By only observing the table, we can not say that wearing a seatbelt really makes a difference. From the people who uses seatbelt, only a few got a head injury. Actually, only  7% of the people who wears a seatbelt gets a head injury.
 From the drivers that did not wear a seatbelt, more than 40% of them got a head injury. So from this simple analysis, we could think that there is an effect of using (or not) the seatbelt in the result of getting (or not) a head injury.
 
-c)
-
-Let´s check the expected counts for the contingency table.
+c) Let´s check the expected counts for the contingency table.
 
 ```{r}
 chisq.test(exerc_4)$expected
 ```
+
 As we can see, all of the expected counts are larger than 5. Then, we can easily perform a chi-square test to check if wearing a seatbelt affect head injury variable. 
 
 ```{r}
@@ -242,7 +255,8 @@ chisq.test(exerc_5)$expected
 ```
 
 As we can see, the condition of expected counts greater or equal than 5 is not satisfied, so this time, we will use the Fishers Exact Test. 
-With this test, we check if the probability that a person was on a real treatment, given that his discomfort was a certain one, and the probability that a person was in the placebo treatment, given that his discomfort ie other. 
+
+With this test, we check if the probability that a person was on a real treatment, given that his discomfort was a certain one, and the probability that a person was in the placebo treatment, given that his discomfort is other. 
 
 This way, we will perform two-sided tests for every combination of groups. In this sense, we will perform 3 Fisher Exact tests, comparing the effect of the treatment in the outcome of ocular discomfort. 
 
@@ -251,6 +265,7 @@ First, between discomfort "1" and "2":
 ```{r}
 fisher.test(exerc_5[,1:2])
 ```
+
 As we can see, the difference between the two proportions is not significant.
 
 Now, between "1" and "3":
@@ -258,6 +273,7 @@ Now, between "1" and "3":
 ```{r}
 fisher.test(exerc_5[,1:3])
 ```
+
 Again the difference does not appear to be significant.
 
 Finally, between "2" and "3":
@@ -265,6 +281,7 @@ Finally, between "2" and "3":
 ```{r}
 fisher.test(exerc_5[,2:3])
 ```
+
 And again, the proportions are not significantly different.
 
 As in the three tests, we get large p-values, we can not reject the null hypothesis of same proportions. This means that we can not say that there is a difference in ocular discomfort between active drug and placebo patients.
@@ -272,6 +289,7 @@ As in the three tests, we get large p-values, we can not reject the null hypothe
 ```{r}
 fisher.test(exerc_5[1:2,1:3])
 ```
+
 As we can see, when we do a simple analysis of the three groups together, we again can not reject the null hypothesis, as the p-value is large. Therefore, we can say that there is no difference between the groups in ocular discomfort.
 
 Now, let´s see what happens when we use a resampling method.
@@ -279,9 +297,19 @@ Now, let´s see what happens when we use a resampling method.
 ```{r}
 chisq.test(exerc_5[1:2,1:3] , simulate.p.value = TRUE , B =1000)
 ```
+
 Again, the p-value of our test is large, confirming what we were concluding before. It seems that there is no significant difference between the placebo patients and treated patients.
 
 ## Exercise 11
+
+There are many ways in which we can define de False Descovery Rate. 
+One way of defining it is to say that it represents the expected proportion of tests in which the null hypothesis is true, from all the tests that have been considered significative. So it is the probability that a null hypothesis is true, when it has been rejected by the test statistic. Or, in the same sense, from all the tests that have been significative
+
+
+
+De entre todos los test considerados significativos, el FDR es la proporción esperada de esos test para los que la hipótesis nula es verdadera.
+Es la proporción de test significativos que realmente no lo son.
+La proporción esperada de falsos positivos de entre todos los test considerados como significativos.
 
 11. Resume the main ideas about the False Discovery Rate (FDR). Explain the
 Benjamini-Hochberg and the q-Value procedures. Show examples of application with R
