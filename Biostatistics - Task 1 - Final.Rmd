@@ -1,7 +1,6 @@
 ---
 title: "Biostatistics - Task  1"
-author: "Mauricio Marcos Fajgenbaun"
-date: "13/5/2021"
+author: "Adrian White & Mauricio Marcos Fajgenbaun"
 output: html_document
 ---
 
@@ -32,12 +31,12 @@ x$Density
 
 a) Three Bonferroni adjusted confidence interval, comparing each parcel with the parcel that had no oysters introduced.
 
-In general, a confidence interval testing equal mean between groups can be performed as follows:
+In general, a confidence interval testing equal mean between groups can be performed as follows.
 
 ```{r}
 library(knitr)
 ```
-$(\hat{\mu_1}-\hat{\mu_2})\pm t_1_-$
+
 
 ```{r}
 mu_none <- 34.81
@@ -96,7 +95,6 @@ b) Repeat the previous item with the Tukey’s Honest Significant Difference
 `
 Now, instead of using a t-statistic, we will be using a studentized range distribution. The confidence interval with the Tukey´s method is as follows:
 
-https://www.itl.nist.gov/div898/handbook/prc/section4/prc471.htm (formula de CI)
 
 ```{r}
 q <- ptukey(q = 0.95 , nmeans = 10, df = 36)
@@ -141,6 +139,9 @@ The confidence intervals we get are very similar in the cases of Bonferroni and 
 ```{r}
 A <- c(324,275,349,604,566,810,340,295,357,580,344,655,380,503,314)
 B <- c(558,108,291,863,303,640,358,503,646,689,250,540,630,190)
+A_B <- c(A,B)
+grouping  <- factor(c(rep('A',length(A)), rep('B', length(B))))
+data <- data.frame(Group = grouping, Value = A_B)
 ```
 
 First, let´s see if they behave normal or not.
@@ -159,9 +160,20 @@ shapiro.test(B)
 
 First, we reject the null hypotesis of Group A having a normal distribution. Nevertheless, when we see the p-value of the second group (group B), it does not behave gaussian. When inspecting the density plots, we see that the group B does not seem to have a skewed distribution, as we can assume normality.
 
-Mann-whitney test
-Compute the medians
-Comment
+I will perform the Mann-whitney test, that ia non-parametric test, given that we can not assume normality across both groups.
+
+```{r}
+wilcox.test(Value ~ Group, data=data )
+```
+
+As we can see, the p-value of the test is fairly large. This tells us that we do not have enough evidence to reject the null hypothesis that sais that there is no difference between the medians in the population, for each group.
+
+Let´s see what happens when we study this issue with a resampling method:
+
+```{r}
+wilcox_test(Value ~ Group, data=data,distribution = approximate(nresample =1000))
+```
+Again, our p-value is larger than zero, meaning that at a significance level of 0,05, we can not reject the null hypothesis that claims that both distributions are identical (thus, their medians are the same).
 
 
 ## Exercise 3
@@ -309,7 +321,7 @@ Our Chi squared test gives us a p-value of 0.867, so we do not reject the Null h
 stats::fisher.test(data[, 1:4])
 ```
 
-The results from Fisher's test point to the same result, we do not reject the Null Hypothesis, which states that the outcome probabilities for the two groups are equal, thus we have evidence for homogeneity across treatment and control groups.
+The results from Fisher's test point to the same result, we do not reject the Null Hypothesis, which states that the outcome probabilities for the two groups are equal, thus we have evidence for homogeneity across treatment and control groups. 
 
 ## Exercise 7
 
@@ -341,8 +353,7 @@ paired.perm.test(data[,2] - data[,3])
 # difference of means is no zero
 ```
 
-Since we are working with a small sample, we can use permutation tests to give us a more realistic p-value. In this case, we see that our p-value is much higher at 0.191, most likely due to the small sample size. Thus, we have evidence to reject the null hypothesis and claim that the difference of means, given our small sample size, is non-zero and that the treatment does assert an effect on the outcome.
-
+Since we are working with a small sample, we can use permutation tests to give us a more realistic p-value. In this case, we see that our p-value is much higher at 0.191, most likely due to the small sample size. Thus, we have evidence to not reject the null hypothesis and claim that the difference of means, given our small sample size and significance level, is zero and that the treatment does not assert an effect on the outcome.
 
 ## Exercise 8
 
@@ -376,7 +387,7 @@ perm.relation(x = x, y = y, method = "spearman", R = 1000)$p.value
 perm.relation(x = x, y = y, method = "kendall", R = 1000)$p.value
 ```
 
-We plot the two variables and see that there is indeed a very stong positive association between the two variables, which our statistical tests confirmed. We can conclude that we do not have independence and have strong evidence for positive association.
+We plot the two variables and see that there is indeed a very strong positive association between the two variables, which our statistical tests confirmed. We can conclude that we do not have independence and have strong evidence for positive association.
 
 ```{r, echo = FALSE}
 plot(x, y, xlab = "Calorie Intake", ylab = "Oxygen", main = "Plot of Calorie Intake vs. Oxygen")
@@ -389,7 +400,8 @@ For this exercise, we have a table recording the diastolic blood pressure of 40 
 We are working with paired numerical data, since repeated measurements were taken for each patient. We must assess for normality for the two groups using the Shapiro-Wilk test. 
 
 ```{r, echo = FALSE}
-data <- read.delim(file = "dbp.txt", header = TRUE, sep = "")
+
+data <- read.delim("dbp.txt", header = TRUE, sep = "")
 
 # test for normality
 shapiro.test(data$DBP[data$TRT=="A"])
@@ -440,7 +452,8 @@ t.test_values <- c(1:5)
 for (i in 1:5) {
   difference_mean[i] <- mean(data$DBP[data$month == i&data$TRT=="A"]) - mean(data$DBP[data$month == i&data$TRT=="B"]) 
   t.test_values[i] <- t.test(data$DBP[data$month == i&data$TRT=="A"], data$DBP[data$month == i&data$TRT=="B"])$p.value
-difference_mean
+}
+-difference_mean
 t.test_values
 ```
 
@@ -464,29 +477,37 @@ dimnames = list ( " Control " = c ( " Yes " , " No ", "Total" ) ,
 exerc_10
 ```
 
+
+
 ```{r}
 rel_freq <- exerc_10/699
 rel_freq
 ```
 
+This is a case of paired data. We state this, because if we would put the data into a data frame, we would see that each observation has two different categorical variables: "Control" (1 or 0), "Hazard" (1 or 0). This way, each observation has two values (one for each dichotomical variable) and they can not be separated, but have to be taken into account together for each observation.
+
+This way, we can perform a McNemar’s test:
+
+
 ```{r}
-chisq.test(exerc_10[1:2,1:2])$expected
+mcnemar.test ( exerc_10[1:2,1:2] , correct = FALSE )
 ```
 
-As all of the counts are larger than 5, we will perform a Chi-sqaure test of independence.
+We rejet independence between the two groups, meaning that we see there is a difference in head injuries, depending on what group each observatio belongs to.
+
+Let´s see what happens when we use a resampling method:
 
 ```{r}
-chisq.test(exerc_10[1:2,1:2])
+mh_test(as.table(exerc_10[1:2,1:2]), distribution = approximate(nresample =10000))
 ```
 
-
+Again, we get a p-value that is very small, meaning that we can reject the null hypothesis (with 95% confidence) of independence between the two groups. This way, we can say that the head injuries are not the same for everyone, but depends on which group each person is.
 
 ## Exercise 11
 
-There are many ways in which we can define de False Descovery Rate. 
-One way of defining it is to say that it represents the expected proportion of tests in which the null hypothesis is true, from all the tests that have been considered significative. So it is the probability that a null hypothesis is true, when it has been rejected by the test statistic. Or, in the same sense, from all the tests that have been considered significative, the FDR is the expected proportion of these test for which the null hypothesis  is true (or the expected proportion of significative tests, that actually are not significative). Finally, we can also say that there is the expected proportion of false positives from all the tests that were considered sttisticlly significative. The FDR has a very easy interpretation: if in an analysis we are told that the FDR is of 20%, we can tell that maximum a 20% of the results considered significative are false positives actually.
+There are many ways in which we can define the False Descovery Rate. It is the probability that a null hypothesis is true, when it has been rejected by the test statistic. Rejection of the Null Hypothesis often implies significance. For example, H0 may indicate a coefficient is non-zero. Thus, a false rejection of the Null Hypothesis implies a false significance. Finally, we can also say that there is the expected proportion of false positives from all the tests that were considered statistically significative. The FDR has a very easy interpretation: if in an analysis we are told that the FDR is of 20%, we can tell that maximum a 20% of the results considered significative are false positives actually.
 
-Once thing we can do is to try and control the false discovery rate, by stablishing a significance limit for a set of tests given that, from all the  tests that were considered significant, the proportion of null hypothesis (false positives) do not excedes a certain value.
+Once thing we can do is to try and control the false discovery rate, by establishing a significance limit for a set of tests given that, from all the  tests that were considered significant, the proportion of null hypothesis (false positives) do not excedes a certain value.
 
 We will describe two different ways to control by False Discovery Rate: Benjamini & Hochberg and q-Value procedure.
 
@@ -504,7 +525,6 @@ d = the false discovery rate (a percentage, chosen by you).
 
 4) Compare your original p-values to the critical B-H from Step 3; find the largest p value that is smaller than the critical value.
 
-
 This way of controlling by FDR becomes extremly useful, as the number of comparison increases. Although we can still use it for analysis with not so many comparisons, when we do have a lot of comparisons to make, this becomes extremely useful.
 
 On the other hand, q-values is another way of dealing with multiple testing and FDR. We can define it as the minimum FDR that can be attained when calling a specific feature "significant". So, in a study where a specific gen has a p-value of 0.020, means that 2% of the genes that show a p-value at least as small as this gene, are false positives.
@@ -514,7 +534,7 @@ In gneral, when we take a p-value of 0.05, it means that % of our tests will res
 
 Example:
 
-Imagine we have a project about happiness, and we want to know what variables are significant in determining certain level of happiness. as we have 15 variables, we get 15 different p-values. Let´s say we want to control our consideration of significance by FDR with Benjamini & Hochberg.
+Imagine we have a project about happiness, and we want to know what variables are significant in determiningcertain level of happiness. as we have 15 variables, we get 15 different p-values. Let´s say we want to control our consideration of significance by FDR with Benjamini & Hochberg.
 
 ```{r}
 Input = ("
@@ -560,12 +580,8 @@ Now, let´s see what happens when we calculate the q-values and add them to the 
 ```{r}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install("qvalue")
 library(qvalue)
-```
-
-```{r}
-qobj<-qvalue(p=results$pvalues, fdr.level=0.2, lambda=0, pi0.method="smoother")
+qobj<-qvalue(p=results$pvalues, fdr.level=0.05, lambda=0, pi0.method="smoother")
 results$qvalues <- qobj$qvalues
 results
 ```
